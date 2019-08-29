@@ -81,6 +81,10 @@ def get_qz_first_level_index():
 def get_hs300_style_index():
     return get_sector_index('a39901010e000000')
 
+# wind商品指数
+def get_wd_good_style_index():
+    return get_sector_index('1000016325000000')
+
 # 填充证券名称
 def pack_sec_name(code_list, df):
     code_df = pd.DataFrame({'wind_code': code_list})

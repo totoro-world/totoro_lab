@@ -3,13 +3,19 @@ from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 import datetime
+import pandas as pd
 import wind_util
+import math_util
 import plotly.graph_objs as go
 
 app = dash.Dash()
 
 def get_all_stock():
-    df = wind_util.get_all_a_stock()
+    a_df = wind_util.get_all_a_stock()
+    f_df = wind_util.get_all_fund()
+    i_df = wind_util.get_all_index()
+    g_df = wind_util.get_wd_good_style_index()
+    df = pd.concat([a_df, f_df, i_df, g_df])
     return [ {'label': '{0} {1}'.format(x['wind_code'], x['sec_name']),
               'value':x['wind_code']} for index, x in df.iterrows() ]
 
@@ -31,8 +37,21 @@ app.layout = html.Div([
         options= get_all_stock(),
         multi=True,
     ),
+    html.Div(id='pearson'),
     dcc.Graph(id='my-graph')
 ])
+
+@app.callback(Output('pearson', 'children'), [Input('my-dropdown', 'value'), Input('date-picker-range', 'start_date'), Input('date-picker-range', 'end_date')])
+def update_graph(selected_dropdown_value, begin_date, end_date):
+    if selected_dropdown_value is None or len(selected_dropdown_value) < 2:
+        return None
+
+    stock1 = selected_dropdown_value[0]
+    stock2 = selected_dropdown_value[1]
+    seri = wind_util.get_close_price(stock1, begin_date, end_date)
+    seri2 = wind_util.get_close_price(stock2, begin_date, end_date)
+    return 'Pearson:{0}'.format(math_util.PearsonIC(seri, seri2))
+
 
 
 @app.callback(Output('my-graph', 'figure'), [Input('my-dropdown', 'value'), Input('date-picker-range', 'start_date'), Input('date-picker-range', 'end_date')])
